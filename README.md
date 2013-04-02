@@ -24,10 +24,10 @@ Where `dir` is the path to a file system directory containing CDA files.
     
 ## License
 
-The MITRE Corporation
+(c) The MITRE Corporation
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
- except in compliance with the License. You may obtain a copy of the License at
+except in compliance with the License. You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 

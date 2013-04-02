@@ -6,5 +6,6 @@
   :dependencies [
     [org.clojure/clojure "1.4.0"]
     [org.clojure/tools.cli "0.2.2"]
-    [org.clojure/data.json "0.2.1"]]
+    [org.clojure/data.json "0.2.1"]
+    [org.clojure/data.csv "0.1.2"]]
   :main extract_cda_codes.core)

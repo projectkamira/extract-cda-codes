@@ -38,12 +38,11 @@
 
 (deftest test-code-counting
   (testing "Code counting"
-    (dosync
-      (alter code-count {}))
+    (swap! code-count {})
     (extract-codes "./test/fixtures/NISTExampleC32.xml")
-    (is (= 1 ((code-count "2.16.840.1.113883.6.1") "30954-2")))
-    (is (= 15 ((code-count "2.16.840.1.113883.6.1") "33999-4")))
-    (is (= 4 ((code-count "2.16.840.1.113883.6.96") "404684003")))
-    (is (= 11 ((code-count "2.16.840.1.113883.6.96") "55561003")))
+    (is (= 1 (((deref code-count) "2.16.840.1.113883.6.1") "30954-2")))
+    (is (= 15 (((deref code-count) "2.16.840.1.113883.6.1") "33999-4")))
+    (is (= 4 (((deref code-count) "2.16.840.1.113883.6.96") "404684003")))
+    (is (= 11 (((deref code-count) "2.16.840.1.113883.6.96") "55561003")))
   )
 )

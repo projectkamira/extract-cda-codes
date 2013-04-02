@@ -1,8 +1,9 @@
 (ns extract_cda_codes.core
   (:gen-class)
-  (:use [clojure.tools.cli :only (cli)])
-  (:use [clojure.string :only (split)])
-  (:use [clojure.data.json :only (write-str write)])
+  (:use [clojure.tools.cli :only (cli)]
+        [clojure.string :only (split)]
+        [clojure.data.json :only (write-str write)]
+        [clojure.data.csv :only (write-csv)])
   (:import [org.xml.sax InputSource]
            [org.xml.sax.helpers DefaultHandler]
            [java.io FileReader]
@@ -10,7 +11,7 @@
 )
 
 ; Map used to hold summary counts of codeSet/code occurence as {oid {'code' count}}
-(def code-count (ref {}))
+(def code-count (atom {}))
 
 ; Utility functions for working with summary counts structure
 (defn merge-code-counts
@@ -26,8 +27,23 @@
 (defn log-code
   "Increment the count for the supplied code"
   [code-system code]
-  (dosync
-    (alter code-count merge-oid-maps {(or code-system "unknown") {code 1}})))
+  (swap! code-count merge-oid-maps {(or code-system "unknown") {code 1}}))
+  
+(defn to-rows
+  "Convert occurence data for a code set to a list of rows of the form ([codeSystem code count] ...). Append resulting rows to supplied list"
+  [codes rows]
+  (let [code-system (first codes)
+        code-counts (second codes)
+        code-names (keys code-counts)
+        new-rows (map #(do [code-system % (code-counts %)]) code-names)]
+    (swap! rows into new-rows)))
+
+(defn to-csv
+  "Convert occurence data to 2D array"
+  [codes]
+  (let [rows (atom '())]
+    (doseq [i codes] (to-rows i rows))
+    (deref rows)))
 
 ; XML parsing code
 (defn logging-start-element-handler
@@ -71,12 +87,16 @@
       (println banner)
       (System/exit 0))
       
-    (doall (pmap extract-codes (list-files args)))
+    (dorun (pmap extract-codes (list-files args)))
     
     (if (:output options)
-      (with-open [w (clojure.java.io/writer (:output options))]
+      (do
+        (with-open [w (clojure.java.io/writer (:output options))]
           (.write w (write-str (deref code-count))))
-      (println (write-str (deref code-count))))
+        (with-open [w (clojure.java.io/writer (clojure.string/join "." [(:output options) "csv"]))]
+          (write-csv w (to-csv (deref code-count)))))
+      (do
+        (println (write-str (deref code-count)))))
       
     (shutdown-agents)))
       
